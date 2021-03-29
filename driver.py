@@ -3,8 +3,6 @@ import requests
 from uuid import uuid4
 from urllib.parse import quote
 
-from requests.api import head
-
 
 class Firefly:
     def __init__(self, host, appID="Firefly.py Driver"):
