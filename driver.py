@@ -72,25 +72,88 @@ class Firefly:
                                  'name': lesson.attrib['name'],
                                  'subject': lesson.attrib['subject']})
 
+    def verify_creds(self):
+        if not hasattr(self, "deviceID") or not hasattr(self, "secret"):
+            return False
+        response = requests.get(
+            f"{self.host}/Login/api/verifytoken?ffauth_device_id={self.deviceID}&ffauth_secret={self.secret}")
+        return response.json()['valid']
+
     def graph_query(self, query):
-        data = quote(query)
+        data = {"data": query}
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         return requests.post(f"{self.host}/_api/1.0/graphql?ffauth_device_id={self.deviceID}&ffauth_secret={self.secret}", data=data, headers=headers)
 
     def get_configuration(self):
-        response = self.graph_query("""query Query {
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        return self.graph_query("""query Query {
 				configuration {
 					week_start_day, weekend_days, native_app_capabilities, notice_group_guid 
 				}
-			}""")  # Fix this
-        print(response.text)
+		    }""").json()
+
+    def get_styles(self):
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        return self.graph_query("""query Query {
+				app_styles {
+					value, name, type, file 
+				}
+			}""").json()
+
+    def get_bookmarks(self):
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        return self.graph_query(f"""query Query {{
+				users(guid: "{self.user['guid']}") {{
+					bookmarks {{
+						simple_url, deletable, position, read, from {{
+							guid, name 
+						}}, type, title, is_form, form_answered, breadcrumb, guid, created 
+					}}
+				}}
+			}}""").json()
+
+    def get_messages(self):
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        return self.graph_query(f"""query Query {{
+				users(guid: "{self.user['guid']}") {{
+					messages {{
+						from {{
+							guid, name 
+						}}, sent, archived, id, single_to {{
+							guid, name 
+						}}, all_recipients, read, body 
+					}}
+				}}
+			}}""").json()
+
+    def get_groups(self):
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        return self.graph_query(f"""query Query {{
+				users(guid: "{self.user['guid']}") {{
+					participating_in {{
+						guid, sort_key, name, personal_colour 
+					}}
+				}}
+			}}""").json()
+
+    def get_events(self, start, end):
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        return self.graph_query(f"""query Query {{
+				events(start: "${start.isoformat().slice(0, -5)+'Z'}", for_guid: "${self.user['guid']}", end: "${end.toISOString().slice(0, -5)+'Z'}") {{ # fix this
+					end, location, start, subject, description, guild, attendees {{ role, principal {{ guid, name }}}}
+				}}
+			}}""").json()
 
 
 school = Firefly("https://esms.fireflycloud.net")
 
-school.set_device_id()
-print(school.get_auth_url())
-input()
+school.set_device_id("9ae53563-70e4-40c7-89e9-02dd75b560fa")
 xml = open("auth.xml", "r").read()
 school.complete_auth(xml)
-school.get_configuration()
+print(school.get_groups())
