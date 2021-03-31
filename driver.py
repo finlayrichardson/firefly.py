@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import requests
 from uuid import uuid4
 from urllib.parse import quote
+from datetime import date
 
 
 class Firefly:
@@ -77,7 +78,9 @@ class Firefly:
             return False
         response = requests.get(
             f"{self.host}/Login/api/verifytoken?ffauth_device_id={self.deviceID}&ffauth_secret={self.secret}")
-        return response.json()['valid']
+        if response.json()['valid']:
+            return True
+        return False
 
     def graph_query(self, query):
         data = {"data": query}
@@ -145,15 +148,17 @@ class Firefly:
         if not hasattr(self, "user"):
             raise Exception("User not authenticated")
         return self.graph_query(f"""query Query {{
-				events(start: "${start.isoformat().slice(0, -5)+'Z'}", for_guid: "${self.user['guid']}", end: "${end.toISOString().slice(0, -5)+'Z'}") {{ # fix this
+				events(start: "{start.strftime("%Y-%m-%dT%H:%M:%SZ")}", for_guid: "{self.user['guid']}", end: "{end.strftime("%Y-%m-%dT%H:%M:%SZ")}") {{
 					end, location, start, subject, description, guild, attendees {{ role, principal {{ guid, name }}}}
 				}}
 			}}""").json()
 
 
-school = Firefly("https://esms.fireflycloud.net")
+host = Firefly.get_host("ESMS")['url']
+school = Firefly(host)
 
 school.set_device_id("9ae53563-70e4-40c7-89e9-02dd75b560fa")
+print(school.get_auth_url())
 xml = open("auth.xml", "r").read()
 school.complete_auth(xml)
-print(school.get_groups())
+print(school.get_events(date.today(), date(2021, 4, 23)))
