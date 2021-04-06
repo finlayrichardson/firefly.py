@@ -2,17 +2,19 @@ import xml.etree.ElementTree as ET
 import requests
 from uuid import uuid4
 from urllib.parse import quote
+from requests.models import Response
 
 
 class Firefly:
-    def __init__(self, host, appID="Firefly.py Driver"):
+    def __init__(self, host: str, appID: str = "Firefly.py Driver"):
         if not host:
             raise Exception("Invalid host")
         self.host = host
         self.appID = appID
 
     @staticmethod
-    def get_host(code, appId='Firefly.py Driver', deviceID=None):
+    def get_host(code: str, appId: str = 'Firefly.py Driver', deviceID: str = None) -> dict:
+        """Gets information about the host from a code"""
         if not deviceID:
             deviceID = uuid4()
         response = requests.get(
@@ -38,27 +40,31 @@ class Firefly:
                 'tokenURL': tokenURL,
                 'deviceID': str(deviceID)}
 
-    def get_api_version(self):
+    def get_api_version(self) -> dict:
+        """Gets the version of the API"""
         response = requests.get(self.host + "/login/api/version")
         response = ET.fromstring(response.content)
         return {'major': int(response[0].text),
                 'minor': int(response[1].text),
                 'increment': int(response[2].text)}
 
-    def set_device_id(self, id=None):
+    def set_device_id(self, id: str = None) -> str:
+        """Sets the device ID to a specified string, or creates one if nothing is passed"""
         if not id:
-            id = uuid4()
+            id = str(uuid4())
         self.deviceID = id
         return id
 
-    def get_auth_url(self):
+    def get_auth_url(self) -> str:
+        """Gets an authorisation URL"""
         if not hasattr(self, "deviceID"):
             self.set_device_id()
         redirect = quote(
             f"{self.host}/Login/api/gettoken?ffauth_device_id={self.deviceID}&ffauth_secret=&device_id={self.deviceID}&app_id={self.appID}")
         return f"{self.host}/login/login.aspx?prelogin={redirect}"
 
-    def complete_auth(self, xml):
+    def complete_auth(self, xml: str):
+        """Parses the information from the xml"""
         token = ET.fromstring(xml)
         self.secret = token[0].text
         self.user = {'username': token[1].attrib['username'],
@@ -72,7 +78,8 @@ class Firefly:
                                  'name': lesson.attrib['name'],
                                  'subject': lesson.attrib['subject']})
 
-    def verify_creds(self):
+    def verify_creds(self) -> bool:
+        """Verifies whether the user is logged in correctly"""
         if not hasattr(self, "deviceID") or not hasattr(self, "secret"):
             return False
         response = requests.get(
@@ -81,12 +88,14 @@ class Firefly:
             return True
         return False
 
-    def graph_query(self, query):
+    def graph_query(self, query: str) -> Response:
+        """Sends a GraphQL query to the API endpoint"""
         data = {"data": query}
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         return requests.post(f"{self.host}/_api/1.0/graphql?ffauth_device_id={self.deviceID}&ffauth_secret={self.secret}", data=data, headers=headers)
 
-    def get_configuration(self):
+    def get_configuration(self) -> dict:
+        """Gets the configuration of the school"""
         if not hasattr(self, "user"):
             raise Exception("User not authenticated")
         return self.graph_query("""query Query {
@@ -95,7 +104,8 @@ class Firefly:
 				}
 		    }""").json()
 
-    def get_styles(self):
+    def get_styles(self) -> dict:
+        """Gets the styles"""
         if not hasattr(self, "user"):
             raise Exception("User not authenticated")
         return self.graph_query("""query Query {
@@ -104,7 +114,8 @@ class Firefly:
 				}
 			}""").json()
 
-    def get_bookmarks(self):
+    def get_bookmarks(self) -> dict:
+        """Gets the user's bookmarks"""
         if not hasattr(self, "user"):
             raise Exception("User not authenticated")
         return self.graph_query(f"""query Query {{
@@ -117,7 +128,8 @@ class Firefly:
 				}}
 			}}""").json()
 
-    def get_messages(self):
+    def get_messages(self) -> dict:
+        """Gets the user's messages"""
         if not hasattr(self, "user"):
             raise Exception("User not authenticated")
         return self.graph_query(f"""query Query {{
@@ -132,7 +144,8 @@ class Firefly:
 				}}
 			}}""").json()
 
-    def get_groups(self):
+    def get_groups(self) -> dict:
+        """Gets the groups that the user is part of"""
         if not hasattr(self, "user"):
             raise Exception("User not authenticated")
         return self.graph_query(f"""query Query {{
@@ -143,7 +156,8 @@ class Firefly:
 				}}
 			}}""").json()
 
-    def get_events(self, start, end):
+    def get_events(self, start, end) -> dict:
+        """Gets all events within a specified time range, passed in as start and end"""
         if not hasattr(self, "user"):
             raise Exception("User not authenticated")
         return self.graph_query(f"""query Query {{
