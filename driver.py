@@ -165,3 +165,23 @@ class Firefly:
 					end, location, start, subject, description, guild, attendees {{ role, principal {{ guid, name }}}}
 				}}
 			}}""").json()
+
+    def get_tasks(self) -> dict:
+        """Get the user's tasks"""
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        data = f"""{{
+                    "archiveStatus": "All",
+                    "completionStatus": "Todo",
+                    "ownerType": "OnlySetters",
+                    "page": 0,
+                    "pageSize": 100,
+                    "sortingCriteria": [
+                        {{
+                        "column": "DueDate",
+                        "order": "Descending"
+                        }}
+                    ]
+                    }}"""
+        return requests.post(f"{self.host}/api/v2/taskListing/view/student/tasks/all/filterBy?ffauth_device_id={self.deviceID}&ffauth_secret={self.secret}", data=data, headers=headers).json()
