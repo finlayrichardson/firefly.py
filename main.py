@@ -3,14 +3,14 @@ from driver import Firefly
 host = Firefly.get_host("ESMS")['url']
 school = Firefly(host)
 
-school.set_device_id('4a059042-a099-48d2-8f92-ab8e7ffa0a17')
-# print(school.get_auth_url())
+print(school.set_device_id('3e1a14a7-5d55-47a4-bdff-90233e14ab37'))
+print(school.get_auth_url())
 
 xml = open("main.xml", "r").read()
 school.complete_auth(xml)
 # print(school.verify_creds())
 
-print(school.get_groups())
+# print(school.get_groups())
 
 
 # 1. Run main.py

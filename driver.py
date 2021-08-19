@@ -3,6 +3,7 @@ import requests
 from uuid import uuid4
 from urllib.parse import quote
 from requests.models import Response
+from datetime import date
 
 
 class Firefly:
@@ -185,3 +186,14 @@ class Firefly:
                     ]
                     }}"""
         return requests.post(f"{self.host}/api/v2/taskListing/view/student/tasks/all/filterBy?ffauth_device_id={self.deviceID}&ffauth_secret={self.secret}", data=data, headers=headers).json()
+
+    def set_personal_task(self, title: str, description: str, due_date: str) -> dict:
+        """Set's a personal task"""
+        if not hasattr(self, "user"):
+            raise Exception("User not authenticated")
+        return self.graph_query(f"""mutation M {{
+                result:tasks(new:true,new_title:"{title}",new_description:"{description}",new_set:"{date.today.strftime("%Y-%m-%d")}",new_due:"{due_date}",new_setter:"{self.user["guid"]}",new_addressees:["{self.user["guid"]}"],new_task_type:"PersonalTask")
+                    {{
+                        id
+                    }}
+                }}""").json()
