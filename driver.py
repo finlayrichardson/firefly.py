@@ -14,7 +14,7 @@ class Firefly:
         self.appID = appID
 
     @staticmethod
-    def get_host(code: str, appId: str = 'Firefly.py Driver', deviceID: str = None) -> dict:
+    def get_host(code: str, appID: str = 'Firefly.py Driver', deviceID: str = None) -> dict:
         """Gets information about the host from a code"""
         if not deviceID:
             deviceID = uuid4()
@@ -30,7 +30,7 @@ class Firefly:
         else:
             url = "http://" + host
         tokenURL = quote(
-            f"{url}/Login/api/gettoken?ffauth_device_id={deviceID}&ffauth_secret=&device_id={deviceID}&app_id={appId}")
+            f"{url}/Login/api/gettoken?ffauth_device_id={deviceID}&ffauth_secret=&device_id={deviceID}&app_id={appID}")
 
         return {'enabled': eval(response.attrib['exists'].title()),
                 'name': response[0].text,
