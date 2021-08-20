@@ -15,7 +15,7 @@ school.complete_auth(xml)
 # print(school.graph_query(
 #     f'mutation M{{result:tasks(ids:[39864],new_delete:true)}}').text)
 # print(school.get_groups())
-# print(school.get_events(date.today(), date(2021, 12, 1)))
+print(school.get_events(date.today(), date(2021, 12, 1)))
 
 # print(school.graph_query("""query Query {
 #     users(guid: "DB:Cloud:DB:PASS:Stud:2662161") {
@@ -45,5 +45,7 @@ school.complete_auth(xml)
 # print(school.get_tasks(2))
 # print(school.get_task_ids())
 
-print(school.graph_query(
-    f'mutation M{{result:tasks(new:true,new_title:"hello tilly",new_description:"hi tilly how are you",new_set:"2021-08-20",new_due:"2021-12-10",new_setter:"{school.user["guid"]}",new_addressees:["{school.user["guid"]}"],new_task_type:"PersonalTask"){{id}}}}').text)
+# print(school.graph_query(
+#     f'mutation M{{result:tasks(new:true,new_title:"hello tilly",new_description:"hi tilly how are you",new_set:"2021-08-20",new_due:"2021-12-10",new_setter:"{school.user["guid"]}",new_addressees:["{school.user["guid"]}"],new_task_type:"PersonalTask"){{id}}}}').text)
+
+# print(school.set_personal_task("test", "this is a test", date(2021, 9, 10)))
