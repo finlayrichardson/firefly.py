@@ -89,6 +89,16 @@ class Firefly:
             return True
         return False
 
+    def delete_token(self) -> bool:
+        """Deletes a user's token"""
+        if not hasattr(self, "deviceID") or not hasattr(self, "secret"):
+            return False
+        response = requests.get(
+            f"{self.host}/Login/api/deletetoken?ffauth_device_id={self.deviceID}&ffauth_secret={self.secret}&app_id={self.appID}")
+        if response.text == "OK":
+            return True
+        return False
+
     def graph_query(self, query: str) -> Response:
         """Sends a GraphQL query to the API endpoint"""
         data = {"data": query}
